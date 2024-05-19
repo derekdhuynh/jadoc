@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 import time
 import jadoc
-import jade_cpu # source: https://github.com/gabrieldernbach/approximate_joint_diagonalization/blob/master/jade/jade_cpu.py ; accessed: 28/09/2021
+from jade import jade_cpu # source: https://github.com/gabrieldernbach/approximate_joint_diagonalization/blob/master/jade/jade_cpu.py ; accessed: 28/09/2021
 
 iR=int(sys.argv[1])
 vAlpha=[0,0.25,0.5,0.75]
