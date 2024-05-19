@@ -91,11 +91,11 @@ def PerformJADOC(mC,mB0=None,iT=100,iTmin=10,dTol=1E-4,dTauH=1E-2,dAlpha=0.9,\
             # raise ValueError("Not supported in jax implementation (for now)")
             print(f'This the number of eigenvalues we want: {iS}')
             #zeros = jnp.zeros((iN, min(iN // 5 - 1, iS)))
-            zeros = jnp.zeros((iN, iS))
-            initial_search_dirs = jnp.fill_diagonal(zeros, 1., inplace=False)
+            #zeros = jnp.zeros((iN, iS))
+            seed = 943898
+            key = jax.random.key(seed)
+            initial_search_dirs = jax.random.normal(key, shape=(iN, iS), dtype=mC.dtype)
             (vD, mP, _) = jax.experimental.sparse.linalg.lobpcg_standard(mC[i], initial_search_dirs)
-            print(vD)
-            print(mP)
         else:
             (vD,mP)=jnp.linalg.eigh(mC[i])
         vD=abs(vD)
