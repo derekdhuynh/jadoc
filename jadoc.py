@@ -132,8 +132,8 @@ def ComputeLoss(mA,vAlphaLambda,bComplex,dTauH=None,bLossOnly=False):
         return dLoss
     else:
         if bComplex:
-            mF=jnp.zeros((iN,iN),dtype="complex128")
-            mF=ComputeFComplex(mF,mA,mDiags,iK,iN)
+            mF = jnp.zeros((iN,iN),dtype="complex128")
+            mF = ComputeFComplex(mF,mA,mDiags,iK,iN)
         else:
             mF=jnp.zeros((iN,iN))
             mF=ComputeFReal(mF,mA,mDiags,iK,iN)
@@ -150,17 +150,19 @@ def ComputeLoss(mA,vAlphaLambda,bComplex,dTauH=None,bLossOnly=False):
         return dLoss,mDiags,dRMSG,mU
 
 #@njit
+@jax.jit
 def ComputeFComplex(mF,mA,mDiags,iK,iN):
-    for i in prange(iK):
-        vDiags=(mDiags[i]).reshape((iN,1))
+    for i in range(mA.shape[0]):
+        vDiags=(mDiags[i]).reshape((mA.shape[1], 1))
         mF+=jnp.dot(mA[i]/vDiags,mA[i].conj().T)
     mF=mF/iK
     return mF
 
 #@njit
+@jax.jit
 def ComputeFReal(mF,mA,mDiags,iK,iN):
-    for i in prange(iK):
-        vDiags=(mDiags[i]).reshape((iN,1))
+    for i in range(mA.shape[0]):
+        vDiags=(mDiags[i]).reshape((mA.shape[1], 1))
         mF+=jnp.dot(mA[i]/vDiags,mA[i].T)
     mF=mF/iK
     return mF
@@ -251,9 +253,10 @@ def UpdateEstimates(mA,mU,mB,dStepSize):
     return mB,mA
 
 #@njit
+@jax.jit
 def RotateData(mR,mData):
     iK=mData.shape[0]
-    for i in prange(iK):
+    for i in range(iK):
         mData = mData.at[i].set(jnp.dot(mR,mData[i]))
     return mData
 
@@ -302,7 +305,7 @@ def SimulateData(iK,iN,iR,dAlpha,bComplex=False,bPSD=True):
             vD=vD**2
         # TODO: A reassignment happens here, see if we could replace it with something else
         # mC[i]=jnp.dot(mR*(vD[None,:]),ConjT(mR))
-        mC.at[i].set(jnp.dot(mR*(vD[None,:]),ConjT(mR)))
+        mC = mC.at[i].set(jnp.dot(mR*(vD[None,:]),ConjT(mR)))
     return mC
 
 def Test():
@@ -310,14 +313,17 @@ def Test():
     iN=500
     iR=1
     dAlpha=0.9
+
     mC=SimulateData(iK,iN,iR,dAlpha)
     dTimeStart=time.time()
-    mB=PerformJADOC(mC,dAlpha=.95,dTol=1E-5,iT=1000, iS=int(iN // 5.1))
-    dTime=time.time()-dTimeStart
+
+    # Make a jitted version of the function
+    mB = PerformJADOC(mC,dAlpha=.95,dTol=1E-5,iT=1000, iS=int(iN // 5.1))
+    dTime = time.time()-dTimeStart
     print("Runtime: "+str(round(dTime,3))+" seconds")
     mD=jnp.empty((iK,iN,iN))
     for i in range(iK):
-        mD[i]=jnp.dot(jnp.dot(mB,mC[i]),mB.T)
+        mD = mD.at[i].set(jnp.dot(jnp.dot(mB,mC[i]),mB.T))
     dSS_C=0
     dSS_D=0
     for i in range(iK):
