@@ -319,6 +319,7 @@ def Test():
 
     # Make a jitted version of the function
     mB = PerformJADOC(mC,dAlpha=.95,dTol=1E-5,iT=1000, iS=int(iN // 5.1))
+    print(mB)
     dTime = time.time()-dTimeStart
     print("Runtime: "+str(round(dTime,3))+" seconds")
     mD=jnp.empty((iK,iN,iN))
