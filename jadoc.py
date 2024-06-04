@@ -1,6 +1,9 @@
 import torch
 import time
 
+if torch.cuda.is_available():
+    torch.set_default_device('cuda')
+
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 def PerformJADOC(mC, mB0=None, iT=100, iTmin=10, dTol=1E-4, dTauH=1E-2, dAlpha=0.9, iS=None):
