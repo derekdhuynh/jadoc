@@ -1,6 +1,8 @@
 import torch
 import time
 
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
 def PerformJADOC(mC, mB0=None, iT=100, iTmin=10, dTol=1E-4, dTauH=1E-2, dAlpha=0.9, iS=None):
     print("Starting JADOC")
     (iK, iN, _) = mC.shape
@@ -13,18 +15,18 @@ def PerformJADOC(mC, mB0=None, iT=100, iTmin=10, dTol=1E-4, dTauH=1E-2, dAlpha=0
     else:
         print("Computing low-dimensional approximation of input matrices")
     if mB0 is None:
-        mB = torch.eye(iN, dtype=mC.dtype)
+        mB = torch.eye(iN, dtype=mC.dtype).to(device)
     elif mB0.shape != (iN, iN):
         raise ValueError("Starting value transformation matrix has wrong shape")
     else:
         mB = mB0
     bComplex = torch.is_complex(mC)
     if bComplex:
-        mA = torch.empty((iK, iN, iS), dtype=torch.complex128)
+        mA = torch.empty((iK, iN, iS), dtype=torch.complex128).to(device)
     else:
-        mA = torch.empty((iK, iN, iS), dtype=mC.dtype)
+        mA = torch.empty((iK, iN, iS), dtype=mC.dtype).to(device)
     print("Regularization strength = " + str(dAlpha))
-    vAlphaLambda = torch.empty(iK, dtype=mC.dtype)
+    vAlphaLambda = torch.empty(iK, dtype=mC.dtype).to(device)
     for i in range(iK):
         mD = mC[i] - mC[i].T.conj()
         dMSD = (mD.abs()**2).mean()
@@ -149,7 +151,7 @@ def ConjT(mA):
     else:
         return mA.T
 
-def SimulateData(iK, iN, iR, dAlpha, bComplex=False, bPSD=True):
+def SimulateData(iK, iN, iR, dAlpha, bComplex=False, bPSD=True, device='cpu'):
     if bComplex:
         sType1 = "Hermitian "
     else:
@@ -168,28 +170,25 @@ def SimulateData(iK, iN, iR, dAlpha, bComplex=False, bPSD=True):
     iSeed = vSeed[iR]
     torch.manual_seed(iSeed)
     if bComplex:
-        mX = torch.randn(iN, iN, dtype=torch.complex128)
-        mC = torch.empty((iK, iN, iN), dtype=torch.complex128)
+        mX = torch.randn(iN, iN, dtype=torch.complex128).to(device)
+        mC = torch.empty((iK, iN, iN), dtype=torch.complex128).to(device)
     else:
-        mX = torch.randn(iN, iN, dtype=torch.float64)
-        mC = torch.empty((iK, iN, iN), dtype=mX.dtype)
+        mX = torch.randn(iN, iN, dtype=torch.float64).to(device)
+        mC = torch.empty((iK, iN, iN), dtype=mX.dtype).to(device)
     for i in range(iK):
         if bComplex:
-            mXk = torch.randn(iN, iN, dtype=torch.complex128)
+            mXk = torch.randn(iN, iN, dtype=torch.complex128).to(device)
         else:
-            mXk = torch.randn(iN, iN, dtype=mX.dtype)
+            mXk = torch.randn(iN, iN, dtype=mX.dtype).to(device)
         mXk = dAlpha * mX + (1 - dAlpha) * mXk
         mR = torch.matrix_exp(mXk - mXk.T.conj())
-        vD = torch.randn(iN, dtype=mX.dtype)
+        vD = torch.randn(iN, dtype=mX.dtype).to(device)
         if bPSD:
             vD = vD**2
         mC[i] = mR @ torch.diag(vD) @ mR.T.conj()
     return mC
 
-def Test():
-    iK = 5
-    #iN = 500
-    iN = 10000
+def Test(iN=500, iK=5):
     iR = 1
     dAlpha = 0.9
     mC = SimulateData(iK, iN, iR, dAlpha)
