@@ -68,10 +68,10 @@ def ComputeLoss(mA, vAlphaLambda, bComplex, dTauH=None, bLossOnly=False):
         return dLoss
     else:
         if bComplex:
-            mF = torch.zeros((iN, iN), dtype=torch.complex128)
+            mF = torch.zeros((iN, iN), dtype=torch.complex128).to(device)
             mF = ComputeFComplex(mF, mA, mDiags, iK, iN)
         else:
-            mF = torch.zeros((iN, iN), dtype=mA.dtype)
+            mF = torch.zeros((iN, iN), dtype=mA.dtype).to(device)
             mF = ComputeFReal(mF, mA, mDiags, iK, iN)
         mG = mF - mF.T.conj()
         dRMSG = torch.sqrt((mG.abs()**2).sum() / (iN * (iN - 1)))
@@ -105,9 +105,9 @@ def PerformGoldenSection(mA, mU, mB, vAlphaLambda, bComplex):
     iK, iN, iS = mA.shape
     mR = torch.matrix_exp(mU)
     if bComplex:
-        mAS = torch.empty((iGuesses, iK, iN, iS), dtype=torch.complex128)
+        mAS = torch.empty((iGuesses, iK, iN, iS), dtype=torch.complex128).to(device)
     else:
-        mAS = torch.empty((iGuesses, iK, iN, iS), dtype=mA.dtype)
+        mAS = torch.empty((iGuesses, iK, iN, iS), dtype=mA.dtype).to(device)
     mAS[0] = mA.clone()
     mAS[1] = RotateData(mR, mA.clone())
     mAS[2] = (1 - dTheta) * mAS[1] + dTheta * mAS[0]
