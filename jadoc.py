@@ -188,14 +188,19 @@ def SimulateData(iK, iN, iR, dAlpha, bComplex=False, bPSD=True, device='cpu'):
         mC[i] = mR @ torch.diag(vD) @ mR.T.conj()
     return mC
 
-def Test(iN=500, iK=5):
+def Test(iN=500, iK=5, runs=1):
     iR = 1
     dAlpha = 0.9
-    mC = SimulateData(iK, iN, iR, dAlpha)
-    dTimeStart = time.time()
-    mB = PerformJADOC(mC, dAlpha=0.95, dTol=1E-5, iT=1000)
-    dTime = time.time() - dTimeStart
-    print(f"Runtime: {round(dTime, 3)} seconds")
+
+    times = []
+    for _ in range(runs):
+        mC = SimulateData(iK, iN, iR, dAlpha)
+        dTimeStart = time.time()
+        mB = PerformJADOC(mC, dAlpha=0.95, dTol=1E-5, iT=1000)
+        dTime = time.time() - dTimeStart
+        times.append(dTime)
+        print(f"Runtime: {round(dTime, 3)} seconds")
+    print(f"Best of {runs} runs: {min(times)}")
     mD = torch.empty((iK, iN, iN)).to(device)
     for i in range(iK):
         mD[i] = mB @ mC[i] @ mB.T
