@@ -196,7 +196,7 @@ def Test(iN=500, iK=5):
     mB = PerformJADOC(mC, dAlpha=0.95, dTol=1E-5, iT=1000)
     dTime = time.time() - dTimeStart
     print(f"Runtime: {round(dTime, 3)} seconds")
-    mD = torch.empty((iK, iN, iN))
+    mD = torch.empty((iK, iN, iN)).to(device)
     for i in range(iK):
         mD[i] = mB @ mC[i] @ mB.T
     dSS_C = 0
